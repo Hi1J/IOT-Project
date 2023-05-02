@@ -29,11 +29,11 @@
 #define A72_COORDINATOR_ADDERSS_IEEE                 0xa4c1381cae35506b      /*!<协调器IEEE地址      */
 #define A72_COORDINATOR_ADDERSS_SHORT                0x0000                 /*!<协调器短地址          */
 
-#define A72_NODE1_ADDERSS_IEEE                       0x1111111111111111     /*!<节点1IEEE地址      */
-#define A72_NODE1_ADDERSS_SHORT                      0x1111                /*!<节点1短地址          */
+#define A72_NODE1_ADDERSS_IEEE                       0xa4c13841d428493f     /*!<节点1IEEE地址      */
+#define A72_NODE1_ADDERSS_SHORT                      0xb76b                 /*!<节点1短地址          */
 
-#define A72_NODE2_ADDERSS_IEEE                       0x1111111111111111     /*!<节点2IEEE地址      */
-#define A72_NODE2_ADDERSS_SHORT                      0x1111                /*!<节点2短地址          */
+#define A72_NODE2_ADDERSS_IEEE                       0xa4c13879d6650ef0      /*!<节点2IEEE地址      */
+#define A72_NODE2_ADDERSS_SHORT                      0xb56e                 /*!<节点2短地址          */
 
 #define A72_NODE3_ADDERSS_IEEE                       0x1111111111111111     /*!<节点3IEEE地址      */
 #define A72_NODE3_ADDERSS_SHORT                      0x1111                /*!<节点3短地址          */

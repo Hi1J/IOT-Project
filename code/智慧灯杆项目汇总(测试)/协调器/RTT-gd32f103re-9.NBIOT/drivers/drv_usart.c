@@ -182,46 +182,50 @@ void USART2_Send_Data(uint8_t *data,uint16_t len)
 void USART2_IRQHandler(void)
 {
 	uint8_t res;
-//	static uint8_t count = 1;
-//	static uint8_t iot_head = 0;
-//	static uint8_t iot_data = 0;
+	static uint8_t count = 1;
+	static uint8_t iot_head = 0;
+	static uint8_t iot_data = 0;
 	if(usart_interrupt_flag_get(USART2,USART_INT_FLAG_RBNE) != RESET)
 	{
 		usart_interrupt_flag_clear(USART2,USART_INT_FLAG_RBNE);//清标志位
 		res = usart_data_receive(USART2);//读取数据
-		usart_data_transmit(USART0,res);//Debug
+		//usart_data_transmit(USART0,res);//Debug
 		//rt_kprintf("%x",res);
 		
-		if(strNB73_Fram_Record .InfBit .FramLength < (RX_BUF_MAX_LEN - 1))  //预留1个字节写结束符
-			strNB73_Fram_Record .Data_RX_BUF [strNB73_Fram_Record .InfBit .FramLength ++] = res;
+
+		if(MQTT_Connect == 1)//接收服务器发来的数据 协议：Modbus
+		{
+			if(iot_data == 0 && res == 0x01)iot_head = res;
+			if((res == 0x46 || res == 0x03 || res == 0x06) && iot_data == 0 && iot_head == 0x01)
+			{
+				NB72_Receive_Buf[0] = iot_head;
+				iot_head = 0;
+				iot_data = 1;
+			}
+			if(iot_data == 1)
+				NB72_Receive_Buf[count++] = res;
+		}
+		else//接收NB73会有数据
+		{
+			if(strNB73_Fram_Record .InfBit .FramLength < (RX_BUF_MAX_LEN - 1))  //预留1个字节写结束符
+				strNB73_Fram_Record .Data_RX_BUF [strNB73_Fram_Record .InfBit .FramLength ++] = res;
 		
-//		if(NB73_Connect == 1)
-//		{
-//			if(iot_data == 0 && res == 0x01)iot_head = res;
-//			if(res == 0x46 && iot_data == 0 && iot_head == 0x01)
-//			{
-//				NB72_Receive_Buf[0] = iot_head;
-//				iot_head = 0;
-//				iot_data = 1;
-//			}
-//			if(iot_data == 1)
-//				NB72_Receive_Buf[count++] = res;
-//		}
-//		
+		}
+		
 	}
 	if(usart_interrupt_flag_get(USART2,USART_INT_FLAG_IDLE) != RESET)
 	{
 		res = usart_data_receive(USART2);
 		
-		strNB73_Fram_Record .InfBit .FramFinishFlag = 1;
-		
-//		if(NB73_Connect == 1 && iot_data == 1)
-//		{
-//			IOT_DATA_LEN = count;
-//			count = 1;
-//			iot_data = 0;
-//			rt_sem_release(NB73_Data_handle);
-//		}
+		if(MQTT_Connect == 1 && iot_data == 1)
+		{
+			IOT_DATA_LEN = count;
+			count = 1;
+			iot_data = 0;
+			rt_sem_release(NB73_Data_handle);
+		}
+		else
+			strNB73_Fram_Record .InfBit .FramFinishFlag = 1;
 			
 		
 		

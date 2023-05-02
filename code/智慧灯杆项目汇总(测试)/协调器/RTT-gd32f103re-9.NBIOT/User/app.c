@@ -30,18 +30,21 @@ rt_uint8_t th9_stack[512] = {0};
 
 uint8_t A72_flag = 0;
 uint8_t A72_Device_Connect = 0;//A72硬件正常与否标志位
-uint8_t NB73_Connect = 0;
+uint8_t NB73_Device_Connect = 0;//NB73硬件正常与否标志位
+uint8_t MQTT_Connect = 0;
 
-uint8_t NODE1_CONNECT_STATUS = 0;//(1:正常状态 0: 异常)
+//节点1标志位
+int NODE1_CONNECT_STATUS = 0;//(1:正常状态 0: 异常)
 uint8_t NODE1_LIGHT_STATUS = 0;
-uint16_t NODE1_LIGHT = 0;
-int NODE1_PEOPLE = 0;
+int NODE1_LIGHT = 28;
+int NODE1_PEOPLE = 46;
 uint8_t RX_NODE1 = 0;
 
-uint8_t NODE2_CONNECT_STATUS = 0; //(1:正常状态 0: 异常)
+//节点2标志位
+int NODE2_CONNECT_STATUS = 0; //(1:正常状态 0: 异常)
 uint8_t NODE2_LIGHT_STATUS = 0;
-uint16_t NODE2_LIGHT = 0;
-int NODE2_PEOPLE = 0;
+int NODE2_LIGHT = 72;
+int NODE2_PEOPLE = 38;
 uint8_t RX_NODE2 = 0;
 
 //动态信号量
@@ -52,6 +55,9 @@ rt_sem_t NB73_Data_handle;
 
 rt_sem_t NODE_Appear_person;
 uint8_t NODE_Appear_dirction = 0;
+
+//MODBUS接收定时器
+struct rt_timer tm1;
 
 
 
@@ -77,7 +83,7 @@ void NB73_Send_Data(void *parameter)
 	int databuf[3];
 	while(1)
 	{
-		rt_thread_mdelay(2500);
+		rt_thread_mdelay(4000);
 		
 		
 		if(RX_NODE1 == 1)
@@ -89,8 +95,8 @@ void NB73_Send_Data(void *parameter)
 			len = MODBUS_Data_Reporting(databuf,3,reg_addre1,buff);
 			for(i=0;i<len;i++)
 			{
-				NB73_Send_A_Data(buff[i]);
 				rt_thread_mdelay(1);
+				NB73_Send_A_Data(buff[i]);
 			}	
 			RX_NODE1 = 0;
 			rt_thread_mdelay(2500);
@@ -104,8 +110,9 @@ void NB73_Send_Data(void *parameter)
 			len = MODBUS_Data_Reporting(databuf,3,reg_addre2,buff);
 			for(i=0;i<len;i++)
 			{
-				NB73_Send_A_Data(buff[i]);
 				rt_thread_mdelay(1);
+				NB73_Send_A_Data(buff[i]);
+				
 			}	
 			RX_NODE2 = 0;
 			rt_thread_mdelay(2500);
@@ -124,7 +131,8 @@ void IOT_Data_handle(void *parameter)
 		
 		NB73_HANDLE_DATA();
 		
-		rt_thread_mdelay(100);
+		
+		rt_thread_mdelay(5);
 		
 	}
 }
@@ -132,6 +140,8 @@ void IOT_Data_handle(void *parameter)
 void WALN_Init(void *parameter)
 {
 	rt_err_t _flag;
+	static uint8_t count = 0;
+	bool mqtt_flag = false;
 	
 	while(1)
 	{
@@ -145,23 +155,49 @@ void WALN_Init(void *parameter)
 				A72_Device_Connect = 1;//设备连接成功标志位置1
 				
 				rt_thread_startup(&th4);
-			}
-		}
-		if(NB73_Connect == 0)//NB73初始化
-		{
-			if(NB73_IOT_Init() == false)
-			LOG_E("NB73_Init create failed..\n");
-			else
-			{
-				LOG_D("NB73_Init create successed..\n");
-				NB73_Connect = 1;
-				rt_thread_mdelay(6000);//等待NB连接服务器成功
-				rt_thread_startup(&th5);
-				rt_thread_startup(&th6);
 				rt_thread_startup(&th8);
 			}
 		}
-		if(A72_Device_Connect == 1 && NB73_Connect == 1)
+		if(NB73_Device_Connect == 0 || MQTT_Connect == 0)//NB73初始化
+		{
+			if(NB73_IOT_Init() == false)
+				LOG_E("NB73_Init create failed..\n");
+			else
+			{
+				
+				LOG_D("NB73_Init create successed..\n");
+				
+				NB73_Device_Connect = 1;
+				
+				strNB73_Fram_Record .InfBit .FramLength = 0;
+				strNB73_Fram_Record.InfBit.FramFinishFlag = 0;
+				memset(strNB73_Fram_Record .Data_RX_BUF,0,300);
+				
+				count = 0;
+				
+				while(count < 300)//等待NB连接服务器成功(最长等待时间 30s)
+				{
+					rt_thread_mdelay(100);
+					mqtt_flag = NB73_MQTT_CHACK();
+					strNB73_Fram_Record .InfBit .FramLength = 0;
+					strNB73_Fram_Record.InfBit.FramFinishFlag = 0;
+					if(mqtt_flag != false)
+					{
+						MQTT_Connect = 1;
+						break;
+					}
+					count++;
+				}
+				if(MQTT_Connect == 1)
+				{
+					rt_kprintf("mqtt Connected..\n");
+					rt_thread_startup(&th5);
+					rt_thread_startup(&th6);
+				}
+			}
+		}
+		
+		if(A72_Device_Connect == 1 && NB73_Device_Connect == 1 && MQTT_Connect == 1)
 		{
 			_flag = rt_thread_suspend(&th7);//挂起自身
 				
@@ -182,6 +218,7 @@ void CHEK_NODE(void *parameter)
 	uint8_t buff1[60] = {0};
 	int len = 0;
 	uint8_t i = 0;
+	data[0] = 0x0000;
 	while(1)
 	{
 		rt_thread_mdelay(45000);//45s检测1次
@@ -197,16 +234,20 @@ void CHEK_NODE(void *parameter)
 		
 		rt_thread_mdelay(4000);//等待回应周期(必须大于节点休眠时间 建议所有节点休眠时间设置为一致)
 		
-		if(NODE1_CONNECT_STATUS == 0)
+		if(NODE1_CONNECT_STATUS == 0)//若得不到回应 上传故障信息至服务器
 		{
 			rt_kprintf("node1 is abnormal\n");
-			len = MODBUS_Data_Reporting(data,1,0x0000,buff1);
-			for(i=0;i<len;i++)
+			if(MQTT_Connect == 1)
 			{
-				NB73_Send_A_Data(buff1[i]);
-				rt_thread_mdelay(1);
+				len = MODBUS_Data_Reporting(data,1,0x0000,buff1);
+				for(i=0;i<len;i++)
+				{
+					rt_thread_mdelay(1);
+					NB73_Send_A_Data(buff1[i]);
+				}
 			}
 			rt_thread_mdelay(2000);
+			
 		}
 		else
 		{
@@ -214,17 +255,20 @@ void CHEK_NODE(void *parameter)
 		}
 			
 		
-		if(NODE2_CONNECT_STATUS == 0)
+		if(NODE2_CONNECT_STATUS == 0)//若得不到回应 上传故障信息至服务器
 		{
 			
-			//memset(buff1,0,60);
 			rt_kprintf("node2 is abnormal\n");
-			len = MODBUS_Data_Reporting(data,1,0x0003,buff1);
-			for(i=0;i<len;i++)
+			if(MQTT_Connect == 1)
 			{
-				NB73_Send_A_Data(buff1[i]);
-				rt_thread_mdelay(1);
+				len = MODBUS_Data_Reporting(data,1,0x0003,buff1);
+				for(i=0;i<len;i++)
+				{
+					rt_thread_mdelay(1);
+					NB73_Send_A_Data(buff1[i]);
+				}
 			}
+			
 			rt_thread_mdelay(2000);
 		}
 		else

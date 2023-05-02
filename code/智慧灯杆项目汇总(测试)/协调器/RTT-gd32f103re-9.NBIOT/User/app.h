@@ -54,7 +54,9 @@ extern uint8_t A72_flag;
 
 extern uint8_t A72_Device_Connect;
 
-extern uint8_t NB73_Connect;
+extern uint8_t NB73_Device_Connect;
+
+extern uint8_t MQTT_Connect;
 
 extern rt_sem_t NB73_Data_handle;
 
@@ -62,15 +64,17 @@ extern rt_sem_t NODE_Appear_person;
 
 extern uint8_t NODE_Appear_dirction;
 
-extern uint8_t NODE1_CONNECT_STATUS;
+extern struct rt_timer tm1;
+
+extern int NODE1_CONNECT_STATUS;
 extern uint8_t NODE1_LIGHT_STATUS;
-extern uint16_t NODE1_LIGHT;
+extern int NODE1_LIGHT;
 extern int NODE1_PEOPLE;
 extern uint8_t RX_NODE1;
 
-extern uint8_t NODE2_CONNECT_STATUS;
+extern int NODE2_CONNECT_STATUS;
 extern uint8_t NODE2_LIGHT_STATUS;
-extern uint16_t NODE2_LIGHT;
+extern int NODE2_LIGHT;
 extern int NODE2_PEOPLE;
 extern uint8_t RX_NODE2;
 

@@ -1,4 +1,104 @@
+/*                                                    
+	                                                    使用说明
+												服务器作主机，单片机作从机
+								该程序中的MODBUS协议并不完善，也并不严谨，其实现的功能只能适用于本程序
+								用户不可直接调用本程序中的MODBUS协议去执行其他工程，否则会导致各种错误
+
+*/
 #include "modbus.h"
+
+/*
+函数功能：寄存器地址转换为数值
+参数：addr：寄存器地址
+返回值：对应数值
+备注：
+*/
+int number_count(int addr)
+{
+	return ((((addr & 61440) >> 12) * 1000) + (((addr & 3840 ) >> 8) * 100) + ((addr & 240) >> 4) * 10) + (addr & 15);
+}
+
+/*
+函数功能：H03功能码处理
+参数：data：接收到的数据
+返回值：void
+备注：03功能码的作用是读取保存寄存器的值 
+	 单片机作为从机需响应服务器的查询需求
+*/
+void MODBUS_H03(uint8_t *data)
+{
+	uint8_t send_buf[128] = {0};
+	uint16_t i = 0;
+	int number = 0;
+	int crc = 0;
+	send_buf[0] = Slave_Address;
+	send_buf[1] = 0x03;
+	send_buf[2] = 2 * data[5];//字节数
+	number = number_count((data[2] << 8) | data[3]) + 1;
+	for(i=0;i<data[5];i++)
+	{
+		send_buf[3 + (i * 2)] = REG(number + i) >> 8;
+		send_buf[4 + (i * 2)] = REG(number + i) & 255;
+	}
+	crc = CRC_Verification(send_buf,3 + i * 2);
+	send_buf[3 + i * 2] = crc >> 8;
+	send_buf[4 + i * 2] = crc & 255;
+	
+	for(number=0;number<5+i*2;number++)
+	{
+		rt_thread_mdelay(1);
+		NB73_Send_A_Data(send_buf[number]);
+	}
+}
+/*
+函数功能：H06功能码处理
+参数：data：接收到的数据
+返回值：void
+备注：03功能码的作用是修改单个寄存器的值
+	 单片机作为从机需执行服务器的修改要求
+*/
+void MODBUS_H06(uint8_t *data)
+{
+	int number = 0;
+	int i = 0;
+	for(i=0;i<8;i++)
+	{
+		rt_thread_mdelay(1);
+		NB73_Send_A_Data(data[i]);
+	}
+	number = number_count((data[2] << 8) | data[3]) + 1;
+	REG(number) = (data[4] <<8) | data[5];
+	rt_kprintf("修改的值：%d\n",REG(number));//Debug
+}
+/*
+函数功能：MODBUS处理数据
+参数：data：接收到的数据
+返回值：void
+备注：该处理函数功能较少 只符合本程序的功能
+*/
+int MODBUS_DATA_HANDLE(uint8_t *data)
+{
+	
+	if(data[0] == Slave_Address)
+	{
+		
+		switch(data[1])
+		{
+			case 0x03://03功能码(读取保存寄存器的值)
+				MODBUS_H03(data);
+				break;
+			case 0x06://06功能码(修改单个寄存器的值)
+				MODBUS_H06(data);
+				break;
+			default:
+				break;
+		}
+	
+	}
+	return 0;
+}
+
+
 
 
 /*
