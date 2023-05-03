@@ -125,15 +125,10 @@ void AppTaskStart(void *parameter)
 	else
 		LOG_D("dynamic NODE1_Appear_person rt_sem_create successed..\n");
 	
-	LED_Control = rt_sem_create("LED_Control",0,RT_IPC_FLAG_FIFO);//按照先进先出方式获取资源
-	if(LED_Control == RT_NULL)
-		LOG_E("dynamic LED_Control rt_sem_create failed..\n");
-	else
-		LOG_D("dynamic LED_Control rt_sem_create successed..\n");
 
 	
 	//任务4创建
-	ret = rt_thread_init(&th4,"Zigbee_Data_handle",Zigbee_Data_handle,NULL,th4_stack,sizeof(th4_stack),16,5);
+	ret = rt_thread_init(&th4,"Zigbee_Data_handle",Zigbee_Data_handle,NULL,th4_stack,sizeof(th4_stack),18,5);
 	if(ret < 0)
 		LOG_E("th4 create failed..\n");
 	else
@@ -168,18 +163,11 @@ void AppTaskStart(void *parameter)
 		LOG_D("th8 create successed..\n");
 	
 	//任务9创建
-	ret = rt_thread_init(&th9,"Turn_on_next",Turn_on_next,NULL,th9_stack,sizeof(th9_stack),17,5);
+	ret = rt_thread_init(&th9,"Turn_on_next",Turn_on_next,NULL,th9_stack,sizeof(th9_stack),18,5);
 	if(ret < 0)
 		LOG_E("th9 create failed..\n");
 	else
 		LOG_D("th9 create successed..\n");
-	
-	//任务10创建
-	ret = rt_thread_init(&th10,"LED_CONTROL",LED_CONTROL,NULL,th10_stack,sizeof(th10_stack),18,5);
-	if(ret < 0)
-		LOG_E("th10 create failed..\n");
-	else
-		LOG_D("th10 create successed..\n");
 	
 		
 	rt_thread_startup(&th7);

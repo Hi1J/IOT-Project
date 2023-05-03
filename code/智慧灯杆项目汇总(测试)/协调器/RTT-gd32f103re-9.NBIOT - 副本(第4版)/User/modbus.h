@@ -27,8 +27,6 @@
 			  : (x) == 4 ? &NODE2_CONNECT_STATUS\
 			  : (x) == 5 ? &NODE2_LIGHT\
 			  : (x) == 6 ? &NODE2_PEOPLE\
-			  : (x) == 7 ? &NODE1_LED_CONTROL\
-			  : (x) == 8 ? &NODE2_LED_CONTROL\
 			  : 0)
 
 

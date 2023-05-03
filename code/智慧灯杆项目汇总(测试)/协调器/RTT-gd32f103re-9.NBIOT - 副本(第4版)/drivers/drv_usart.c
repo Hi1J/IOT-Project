@@ -88,6 +88,7 @@ void USART1_Send_Data(uint8_t *data,uint16_t len)
 void USART1_IRQHandler(void)
 {
 	uint8_t res;
+//	uint8_t i = 0;
 	static uint8_t count = 0;
 	if(usart_interrupt_flag_get(USART1,USART_INT_FLAG_RBNE) != RESET)
 	{
@@ -95,6 +96,7 @@ void USART1_IRQHandler(void)
 		res = usart_data_receive(USART1);//读取数据
 		USART1_RX_BUF[count++] = res;//存入数组
 //		usart_data_transmit(USART0,res);//Debug
+//		rt_kprintf("%x ",res);
 	}
 	if(usart_interrupt_flag_get(USART1,USART_INT_FLAG_IDLE) != RESET)
 	{
@@ -203,7 +205,7 @@ void USART2_IRQHandler(void)
 			if(iot_data == 1)
 				NB72_Receive_Buf[count++] = res;
 		}
-		else//接收NB73回应数据
+		else//接收NB73会有数据
 		{
 			if(strNB73_Fram_Record .InfBit .FramLength < (RX_BUF_MAX_LEN - 1))  //预留1个字节写结束符
 				strNB73_Fram_Record .Data_RX_BUF [strNB73_Fram_Record .InfBit .FramLength ++] = res;

@@ -24,7 +24,7 @@
 
 
 extern struct rt_thread th4;
-extern rt_uint8_t th4_stack[2048];
+extern rt_uint8_t th4_stack[512];
 
 extern struct rt_thread th5;
 extern rt_uint8_t th5_stack[512];
@@ -41,16 +41,12 @@ extern rt_uint8_t th8_stack[512];
 extern struct rt_thread th9;
 extern rt_uint8_t th9_stack[512];
 
-extern struct rt_thread th10;
-extern rt_uint8_t th10_stack[512];
 
 extern rt_sem_t A72_Respond;
 
 extern rt_sem_t A72_Connect;
 
 extern rt_sem_t A72_Data_handle;
-
-extern rt_sem_t LED_Control;
 
 extern rt_err_t A72_Cheak;
 
@@ -68,24 +64,18 @@ extern rt_sem_t NODE_Appear_person;
 
 extern uint8_t NODE_Appear_dirction;
 
-extern uint8_t LED1_Control_do;
-
-extern uint8_t LED2_Control_do;
-
 extern struct rt_timer tm1;
 
 extern int NODE1_CONNECT_STATUS;
-extern uint8_t NODE1_LED_STATUS;
+extern uint8_t NODE1_LIGHT_STATUS;
 extern int NODE1_LIGHT;
 extern int NODE1_PEOPLE;
-extern int NODE1_LED_CONTROL;
 extern uint8_t RX_NODE1;
 
 extern int NODE2_CONNECT_STATUS;
-extern uint8_t NODE2_LED_STATUS;
+extern uint8_t NODE2_LIGHT_STATUS;
 extern int NODE2_LIGHT;
 extern int NODE2_PEOPLE;
-extern int NODE2_LED_CONTROL;
 extern uint8_t RX_NODE2;
 
 //º¯ÊýÉùÃ÷
@@ -95,7 +85,6 @@ void NB73_Send_Data(void *parameter);
 void IOT_Data_handle(void *parameter);
 void CHEK_NODE(void *parameter);
 void Turn_on_next(void *parameter);
-void LED_CONTROL(void *parameter);
 
 void WALN_Init(void *parameter);
 

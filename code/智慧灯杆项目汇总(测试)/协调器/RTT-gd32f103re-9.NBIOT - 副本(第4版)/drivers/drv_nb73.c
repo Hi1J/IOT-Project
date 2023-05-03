@@ -188,7 +188,7 @@ void NB73_HANDLE_DATA(void)
 	
 	MODBUS_DATA_HANDLE(NB72_Receive_Buf);
 	
-	memset(NB72_Receive_Buf,0,50);
+	memset(NB72_Receive_Buf,0,20);
 	
 	IOT_DATA_LEN = 0;
 }

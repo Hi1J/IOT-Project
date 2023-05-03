@@ -550,7 +550,7 @@ void A72_HANDLE_DATA(void)
 	
 	uint8_t len;//数据长度存储变量
 	uint8_t count;//临时变量
-	uint8_t rx_data_buf[128];
+	uint8_t rx_data_buf[81];
 	
 	len = A72_RX_BUF[4] - L_Receive_Data + 1;
 	
@@ -564,7 +564,6 @@ void A72_HANDLE_DATA(void)
 	}
 	//rt_kprintf("\n");//Debug
 	
-	memset(A72_RX_BUF,0,128);
 	
 	/******************用户定义区******************/
 	
@@ -577,7 +576,7 @@ void A72_HANDLE_DATA(void)
 			}
 			else//否则为接收数据
 			{
-				rt_kprintf("node1:lig:%d peo:%d led-st:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
+				rt_kprintf("node1:ligth:%d people:%d stat:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
 				NODE1_LIGHT = rx_data_buf[1] << 8 | rx_data_buf[2];
 				if((rx_data_buf[3] << 8 | rx_data_buf[4]) > NODE1_PEOPLE)
 				{
@@ -585,7 +584,7 @@ void A72_HANDLE_DATA(void)
 					NODE_Appear_dirction = 0x12;
 				}
 				NODE1_PEOPLE = rx_data_buf[3] << 8 | rx_data_buf[4];
-				NODE1_LED_STATUS = rx_data_buf[5];
+				NODE1_LIGHT_STATUS = rx_data_buf[5];
 				RX_NODE1 = 1;
 			}
 			
@@ -597,7 +596,7 @@ void A72_HANDLE_DATA(void)
 			}
 			else//否则为接收数据
 			{
-				rt_kprintf("node2:lig:%d peo:%d led-st:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
+				rt_kprintf("node2:ligth:%d people:%d stat:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
 				NODE2_LIGHT = rx_data_buf[1] << 8 | rx_data_buf[2];
 				if((rx_data_buf[3] << 8 | rx_data_buf[4]) > NODE2_PEOPLE)
 				{
@@ -605,7 +604,7 @@ void A72_HANDLE_DATA(void)
 					NODE_Appear_dirction = 0x21;
 				}
 				NODE2_PEOPLE = rx_data_buf[3] << 8 | rx_data_buf[4];
-				NODE2_LED_STATUS = rx_data_buf[5];
+				NODE2_LIGHT_STATUS = rx_data_buf[5];
 				RX_NODE2 = 1;
 			}
 			break;
@@ -615,7 +614,7 @@ void A72_HANDLE_DATA(void)
 	
 	
 	/******************用户定义区******************/
-//	memset(A72_RX_BUF,0,128);
+	memset(A72_RX_BUF,0,128);
 	
 }
 
@@ -718,7 +717,7 @@ void A72_Print_Information(void)
 int rt_A72_init(void)
 {
 	rt_device_t a72_dev;
-	a72_dev = rt_device_create(RT_Device_Class_Block,128);
+	a72_dev = rt_device_create(RT_Device_Class_Block,64);
 	if(a72_dev == RT_NULL)
 	{
 		LOG_E("a72_dev rt_device_create failed..\n");

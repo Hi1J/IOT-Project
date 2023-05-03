@@ -68,21 +68,7 @@ void MODBUS_H06(uint8_t *data)
 	}
 	number = number_count((data[2] << 8) | data[3]) + 1;
 	REG(number) = (data[4] <<8) | data[5];
-	switch(number)
-	{
-		case 7:
-			LED1_Control_do = 1;
-			rt_sem_release(LED_Control);
-			break;
-		case 8:
-			LED2_Control_do = 1;
-			rt_sem_release(LED_Control);
-			break;
-		default:
-			break;
-	}
-	rt_kprintf("修改寄存器%d的值：%d\n",number,REG(number));//Debug
-	//rt_kprintf("验证：%d\n",NODE1_LED_CONTROL);
+	rt_kprintf("修改的值：%d\n",REG(number));//Debug
 }
 /*
 函数功能：MODBUS处理数据
