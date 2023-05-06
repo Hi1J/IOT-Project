@@ -25,6 +25,8 @@ rt_uint8_t th7_stack[512] = {0};
 struct rt_thread th8;
 rt_uint8_t th8_stack[512] = {0};
 
+struct rt_thread th9;
+rt_uint8_t th9_stack[512] = {0};
 
 struct rt_thread th10;
 rt_uint8_t th10_stack[512] = {0};
@@ -37,27 +39,18 @@ uint8_t MQTT_Connect = 0;//与服务器连接与否标志位
 //节点1标志位
 int NODE1_CONNECT_STATUS = 0;//(1:正常状态 0: 异常)
 uint8_t NODE1_LED_STATUS = 0;
-int NODE1_LIGHT = 0;
-int NODE1_PEOPLE = 0;
+int NODE1_LIGHT = 28;
+int NODE1_PEOPLE = 46;
 int NODE1_LED_CONTROL = 0;
 uint8_t RX_NODE1 = 0;
 
 //节点2标志位
 int NODE2_CONNECT_STATUS = 0; //(1:正常状态 0: 异常)
 uint8_t NODE2_LED_STATUS = 0;
-int NODE2_LIGHT = 0;
-int NODE2_PEOPLE = 0;
+int NODE2_LIGHT = 72;
+int NODE2_PEOPLE = 38;
 int NODE2_LED_CONTROL = 0;
 uint8_t RX_NODE2 = 0;
-
-//节点2标志位
-int NODE3_CONNECT_STATUS = 0; //(1:正常状态 0: 异常)
-uint8_t NODE3_LED_STATUS = 0;
-int NODE3_LIGHT = 0;
-int NODE3_PEOPLE = 0;
-int NODE3_LED_CONTROL = 0;
-uint8_t RX_NODE3 = 0;
-
 
 //动态信号量
 rt_sem_t A72_Respond;//A72回应信号量
@@ -65,10 +58,11 @@ rt_sem_t A72_Connect;//A72连接信号量
 rt_sem_t A72_Data_handle;
 rt_sem_t NB73_Data_handle;
 rt_sem_t LED_Control;//LED亮灭信号量
+rt_sem_t NODE_Appear_person;
 
+uint8_t NODE_Appear_dirction = 0;
 uint8_t LED1_Control_do = 0;//LED1控制动作标志位
 uint8_t LED2_Control_do = 0;//LED2控制动作标志位
-uint8_t LED3_Control_do = 0;//LED2控制动作标志位
 
 //MODBUS接收定时器
 struct rt_timer tm1;
@@ -109,8 +103,6 @@ void NB73_Send_Data(void *parameter)
 	int databuf[3];
 	static int led1_control_frist = 1;
 	static int led2_control_frist = 1;
-	static int led3_control_frist = 1;
-	
 	while(1)
 	{
 		rt_thread_mdelay(3000);
@@ -135,7 +127,7 @@ void NB73_Send_Data(void *parameter)
 				memset(databuf,0,3);
 				memset(buff,0,60);
 				databuf[0] = NODE1_LED_STATUS;
-				len = MODBUS_Data_Reporting(databuf,1,0x0003,buff);
+				len = MODBUS_Data_Reporting(databuf,1,0x0006,buff);
 				for(i=0;i<len;i++)
 				{
 					rt_thread_mdelay(1);
@@ -175,38 +167,6 @@ void NB73_Send_Data(void *parameter)
 				}
 				rt_kprintf("NB send node2 led frist control\n");
 				led2_control_frist = 0;
-				rt_thread_mdelay(3000);//必须加上
-			}
-		
-		}
-		if(RX_NODE3 == 1)
-		{
-			databuf[0] = NODE3_LED_STATUS;
-			databuf[1] = NODE3_LIGHT;
-			databuf[2] = NODE3_PEOPLE;
-			len = MODBUS_Data_Reporting(databuf,3,reg_addre3,buff);
-			for(i=0;i<len;i++)
-			{
-				rt_thread_mdelay(1);
-				NB73_Send_A_Data(buff[i]);
-				
-			}
-			rt_kprintf("NB send node3 data\n");
-			RX_NODE3 = 0;
-			rt_thread_mdelay(2500);
-			if(led3_control_frist == 1)//第一次记录灯的状态给开关
-			{
-				memset(databuf,0,3);
-				memset(buff,0,60);
-				databuf[0] = NODE3_LED_STATUS;
-				len = MODBUS_Data_Reporting(databuf,1,0x0011,buff);
-				for(i=0;i<len;i++)
-				{
-					rt_thread_mdelay(1);
-					NB73_Send_A_Data(buff[i]);
-				}
-				rt_kprintf("NB send node3 led frist control\n");
-				led3_control_frist = 0;
 				rt_thread_mdelay(3000);//必须加上
 			}
 		}
@@ -249,6 +209,7 @@ void WALN_Init(void *parameter)
 				
 				rt_thread_startup(&th4);
 				rt_thread_startup(&th8);
+				rt_thread_startup(&th9);
 			}
 		}
 		if(NB73_Device_Connect == 0 || MQTT_Connect == 0)//NB73初始化
@@ -321,9 +282,10 @@ void CHEK_NODE(void *parameter)
 		
 		NODE1_CONNECT_STATUS = 0;
 		NODE2_CONNECT_STATUS = 0;
-		NODE3_CONNECT_STATUS = 0;
 		
-		A72_SEND_DATA(_B_ALL,&SEND_MODE_BROADCAST,chakbuf,2);//广播发送
+		A72_SEND_DATA(_NODE1,&A72_SEND_MODE_SHORT,chakbuf,2);
+		rt_thread_mdelay(100);
+		A72_SEND_DATA(_NODE2,&A72_SEND_MODE_SHORT,chakbuf,2);
 		
 		rt_thread_mdelay(5000);//等待回应周期(必须大于节点休眠时间 建议所有节点休眠时间设置为一致)
 		
@@ -354,7 +316,7 @@ void CHEK_NODE(void *parameter)
 			rt_kprintf("node2 is abnormal\n");
 			if(MQTT_Connect == 1)
 			{
-				len = MODBUS_Data_Reporting(data,1,0x0004,buff1);
+				len = MODBUS_Data_Reporting(data,1,0x0003,buff1);
 				for(i=0;i<len;i++)
 				{
 					rt_thread_mdelay(1);
@@ -368,33 +330,38 @@ void CHEK_NODE(void *parameter)
 		{
 			rt_kprintf("node2 connection is normal\n");
 		}
-		
-		if(NODE3_CONNECT_STATUS == 0)//若得不到回应 上传故障信息至服务器
-		{
-			
-			rt_kprintf("node3 is abnormal\n");
-			if(MQTT_Connect == 1)
-			{
-				len = MODBUS_Data_Reporting(data,1,0x0008,buff1);
-				for(i=0;i<len;i++)
-				{
-					rt_thread_mdelay(1);
-					NB73_Send_A_Data(buff1[i]);
-				}
-			}
-			
-			rt_thread_mdelay(2000);
-		}
-		else
-		{
-			rt_kprintf("node3 connection is normal\n");
-		}
 			
 		
 	}
 
 }
 
+//任务9函数 发送预测信息
+void Turn_on_next(void *parameter)
+{
+	uint8_t buf[3] = {0};
+	buf[0] = 0x00;//协调器发送
+	buf[1] = 0x78;//转向标志位
+	while(1)
+	{
+		rt_sem_take(NODE_Appear_person,RT_WAITING_FOREVER);
+		buf[2] = NODE_Appear_dirction;
+		switch(NODE_Appear_dirction)
+		{
+			case 0x12:
+				A72_SEND_DATA(_NODE2,&A72_SEND_MODE_SHORT,buf,3);
+				rt_kprintf("turn:1-->2");
+				break;
+			case 0x21:
+				A72_SEND_DATA(_NODE1,&A72_SEND_MODE_SHORT,buf,3);
+				rt_kprintf("turn:2-->1");
+				break;
+			default:
+				break;
+		}
+		rt_thread_mdelay(100);
+	}
+}
 
 void LED_CONTROL(void *parameter)
 {
@@ -428,17 +395,6 @@ void LED_CONTROL(void *parameter)
 				rt_kprintf("Control LED2 0FF\n");
 			else
 				rt_kprintf("Control LED2 ON\n");
-		}
-		
-		if(LED3_Control_do == 1)
-		{
-			buf[2] = NODE3_LED_CONTROL;
-			A72_SEND_DATA(_NODE3,&A72_SEND_MODE_SHORT,buf,3);
-			LED3_Control_do = 0;
-			if(NODE3_LED_CONTROL == 0)
-				rt_kprintf("Control LED3 0FF\n");
-			else
-				rt_kprintf("Control LED3 ON\n");
 		}
 			
 		

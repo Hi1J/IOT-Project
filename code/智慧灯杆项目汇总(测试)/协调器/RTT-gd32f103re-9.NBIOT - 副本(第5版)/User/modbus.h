@@ -24,15 +24,11 @@
 #define reg(x) ((x) == 1 ? &NODE1_CONNECT_STATUS\
 			  : (x) == 2 ? &NODE1_LIGHT\
 			  : (x) == 3 ? &NODE1_PEOPLE\
-			  : (x) == 4 ? &NODE1_LED_CONTROL\
-			  : (x) == 5 ? &NODE2_CONNECT_STATUS\
-			  : (x) == 6 ? &NODE2_LIGHT\
-			  : (x) == 7 ? &NODE2_PEOPLE\
+			  : (x) == 4 ? &NODE2_CONNECT_STATUS\
+			  : (x) == 5 ? &NODE2_LIGHT\
+			  : (x) == 6 ? &NODE2_PEOPLE\
+			  : (x) == 7 ? &NODE1_LED_CONTROL\
 			  : (x) == 8 ? &NODE2_LED_CONTROL\
-			  : (x) == 9 ? &NODE3_CONNECT_STATUS\
-			  : (x) == 10 ? &NODE3_LIGHT\
-			  : (x) == 11 ? &NODE3_PEOPLE\
-			  : (x) == 12 ? &NODE3_LED_CONTROL\
 			  : 0)
 
 

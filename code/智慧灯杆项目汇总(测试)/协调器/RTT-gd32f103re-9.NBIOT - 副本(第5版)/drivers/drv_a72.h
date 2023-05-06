@@ -26,10 +26,6 @@
 #define A72_NODE5_ADDERSS_SHORT                      0x1111                  //节点5短地址     
 */
 
-#define A72_NODE3_ADDERSS_BROADCAST_ALL              0xFFFF                  /*!<广播发送给所有设备      */
-#define A72_NODE3_ADDERSS_BROADCAST_SLEEP            0xFFFD                  /*!<广播发送给睡眠设备      */
-#define A72_NODE3_ADDERSS_BROADCAST_ROUTER           0xFFFC                  /*!<广播发送给路由器设备    */
-
 #define A72_COORDINATOR_ADDERSS_IEEE                 0xa4c1381cae35506b      /*!<协调器IEEE地址      */
 #define A72_COORDINATOR_ADDERSS_SHORT                0x0000                 /*!<协调器短地址          */
 
@@ -39,11 +35,8 @@
 #define A72_NODE2_ADDERSS_IEEE                       0xa4c13879d6650ef0      /*!<节点2IEEE地址      */
 #define A72_NODE2_ADDERSS_SHORT                      0xb56e                 /*!<节点2短地址          */
 
-#define A72_NODE3_ADDERSS_IEEE                       0xa4c1382784a9d8c2      /*!<节点3IEEE地址      */
-#define A72_NODE3_ADDERSS_SHORT                      0x6937                /*!<节点3短地址          */
-
-
-
+#define A72_NODE3_ADDERSS_IEEE                       0x1111111111111111     /*!<节点3IEEE地址      */
+#define A72_NODE3_ADDERSS_SHORT                      0x1111                /*!<节点3短地址          */
 
 
 /*
@@ -57,9 +50,6 @@
 #define _NODE1             1      /*!<目标:节点1          */
 #define _NODE2             2      /*!<目标:节点2          */
 #define _NODE3             3      /*!<目标:节点3          */
-#define _B_ALL            99      /*!<目标:广播所有设备   */
-#define _B_SLEEP          98      /*!<目标:广播睡眠设备   */
-#define _B_ROUTER         97      /*!<目标:广播路由器     */
 
 #define s_adderss(x)         A72_NODE##x##_ADDERSS_SHORT
 #define ieee_adderss(x)      A72_NODE##x##_ADDERSS_IEEE
@@ -88,20 +78,11 @@
 						: (x) == _NODE3 ? ieee_adderss(3)\
 						: A72_COORDINATOR_ADDERSS_IEEE)
 
-
-/*
-说明：
-广播模式选择
-*/
-#define BROAD_adderss(x)  ((x) == _B_ALL ? A72_NODE3_ADDERSS_BROADCAST_ALL\
-                         : (x) == _NODE2 ? A72_NODE3_ADDERSS_BROADCAST_SLEEP\
-						 : A72_NODE3_ADDERSS_BROADCAST_ROUTER)
-
 /*
 功能：发送模式设置
 参数：x:目的地 y:地址长
 */
-#define mode_adderss(x,y) ((y) > 2 ? IEEE_adderss(x) : (x) < 90 ? S_adderss(x) : BROAD_adderss(x)) 
+#define mode_adderss(x,y) ((y) > 2 ? IEEE_adderss(x) : S_adderss(x)) 
 
 
 
@@ -127,19 +108,6 @@ A72终端节点 唤醒PIN:PA1
 #define C_Connect_status 0x000D //命令
 #define L_Connect_status 0x0000 //长度
 #define V_Connect_status 0x00 //校验
-
-
-/*查询休眠时间*/
-#define Sleep_time_Bytes 7 //指令字节个数
-#define C_Sleep_time 0x01D1 //命令
-#define L_Sleep_time 0x0000 //长度
-#define V_Sleep_time 0x00 //校验
-
-/*设置休眠时间*/
-#define SET_time_Bytes 9 //指令字节个数
-#define C_SET_time 0x01D0 //命令
-#define L_SET_time 0x0002 //长度
-#define V_SET_time 0x00 //校验
 
 #endif
 
@@ -178,11 +146,9 @@ A72终端节点 唤醒PIN:PA1
 #define C_Send_Data 0x0044        //命令
 #define L_Send_Data_SHORT 0x0007  //短地址模式长度初始值(1个字节)
 #define L_Send_Data_IEEE 0x000D   //IEEE模式长度初始值(1个字节)
-#define L_Send_Data_BROADCAST 0X0007  //广播模式长度初始值(1个字节)
 #define V_Send_Data 0x00          //校验
 #define M_Send_Data_SHORT 0x02    //地址模式:目标短地址和目标端口
 #define M_Send_Data_IEEE 0x03     //地址模式:目标IEEE地址和目标端口
-#define M_Send_Data_BROADCAST 0x04  //地址模式:广播
 #define SPORT_Send_Data 0x01      //源端口
 #define TPORT_Send_Data 0x01      //目标端口
 #define User_Send_Data_LEN(x) x   //用户数据长度
@@ -255,7 +221,6 @@ extern A72_Instruction_Format READ_ADDERSS;
 extern A72_Instruction_Format Device_Type;
 extern A72_SEND_MODE SEND_MODE_IEEE;
 extern A72_SEND_MODE SEND_MODE_SHORT;
-extern A72_SEND_MODE SEND_MODE_BROADCAST;
 #if ZIGBEE_A72_COORDINATOR
 extern A72_Instruction_Format CreateNet;
 #endif

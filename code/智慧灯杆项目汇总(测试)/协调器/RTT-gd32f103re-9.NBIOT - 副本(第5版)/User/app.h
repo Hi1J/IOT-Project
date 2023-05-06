@@ -38,6 +38,8 @@ extern rt_uint8_t th7_stack[512];
 extern struct rt_thread th8;
 extern rt_uint8_t th8_stack[512];
 
+extern struct rt_thread th9;
+extern rt_uint8_t th9_stack[512];
 
 extern struct rt_thread th10;
 extern rt_uint8_t th10_stack[512];
@@ -62,11 +64,13 @@ extern uint8_t MQTT_Connect;
 
 extern rt_sem_t NB73_Data_handle;
 
+extern rt_sem_t NODE_Appear_person;
+
+extern uint8_t NODE_Appear_dirction;
+
 extern uint8_t LED1_Control_do;
 
 extern uint8_t LED2_Control_do;
-
-extern uint8_t LED3_Control_do;
 
 extern struct rt_timer tm1;
 
@@ -84,19 +88,13 @@ extern int NODE2_PEOPLE;
 extern int NODE2_LED_CONTROL;
 extern uint8_t RX_NODE2;
 
-extern int NODE3_CONNECT_STATUS;
-extern uint8_t NODE3_LED_STATUS;
-extern int NODE3_LIGHT;
-extern int NODE3_PEOPLE;
-extern int NODE3_LED_CONTROL;
-extern uint8_t RX_NODE3;
-
 //º¯ÊýÉùÃ÷
 void Zigbee_Data_handle(void *parameter);
 
 void NB73_Send_Data(void *parameter);
 void IOT_Data_handle(void *parameter);
 void CHEK_NODE(void *parameter);
+void Turn_on_next(void *parameter);
 void LED_CONTROL(void *parameter);
 
 void WALN_Init(void *parameter);

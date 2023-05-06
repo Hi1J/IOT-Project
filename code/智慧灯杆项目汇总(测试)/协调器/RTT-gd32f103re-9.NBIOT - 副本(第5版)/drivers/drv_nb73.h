@@ -42,7 +42,6 @@ extern uint8_t NB72_Receive_Buf[50];
 extern uint8_t IOT_DATA_LEN;
 extern int reg_addre1;
 extern int reg_addre2;
-extern int reg_addre3;
 extern rt_device_t NB73_dev;
 
 bool NB73_IOT_Init(void);

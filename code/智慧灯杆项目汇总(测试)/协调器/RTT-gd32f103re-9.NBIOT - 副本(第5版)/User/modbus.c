@@ -70,16 +70,12 @@ void MODBUS_H06(uint8_t *data)
 	REG(number) = (data[4] <<8) | data[5];
 	switch(number)
 	{
-		case 4:
+		case 7:
 			LED1_Control_do = 1;
 			rt_sem_release(LED_Control);
 			break;
 		case 8:
 			LED2_Control_do = 1;
-			rt_sem_release(LED_Control);
-			break;
-		case 12:
-			LED3_Control_do = 1;
 			rt_sem_release(LED_Control);
 			break;
 		default:

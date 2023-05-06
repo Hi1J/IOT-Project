@@ -10,8 +10,7 @@ struct  STRUCT_USARTx_Fram strNB73_Fram_Record = { 0 };
 uint8_t NB72_Receive_Buf[50];
 uint8_t IOT_DATA_LEN = 0;
 int reg_addre1 = 0x0000;
-int reg_addre2 = 0x0004;
-int reg_addre3 = 0x0008;
+int reg_addre2 = 0x0003;
 
 /*
 函数功能：NB73初始化

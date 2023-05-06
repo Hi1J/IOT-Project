@@ -43,11 +43,6 @@ A72_Instruction_Format CreateNet =
 #if ZIGBEE_A72_NODE
 A72_Instruction_Format Connect_status = 
 {.command = C_Connect_status,.length = L_Connect_status,.verification = V_Connect_status,.Order_Bytes = Connect_status_Bytes};
-
-//查询休眠时间指令初始化
-A72_Instruction_Format Sleep_time =
-{.command = C_Sleep_time,.length = L_Sleep_time,.verification = V_Sleep_time,.Order_Bytes = Sleep_time_Bytes};
-
 #endif
 
 //IEEE地址发送模式初始化
@@ -57,10 +52,6 @@ A72_SEND_MODE SEND_MODE_IEEE =
 //短地址发送模式初始化
 A72_SEND_MODE SEND_MODE_SHORT = 
 {.L_Send_Data = L_Send_Data_SHORT,.M_Send_Data = M_Send_Data_SHORT,.Address_Length = 2};
-
-//广播发送模式初始化
-A72_SEND_MODE SEND_MODE_BROADCAST = 
-{.L_Send_Data = L_Send_Data_BROADCAST,.M_Send_Data = M_Send_Data_BROADCAST,.Address_Length = 2};
 
 /*
 函数功能：用于A72无回应的指令
@@ -249,75 +240,6 @@ int A72_Read_Connect_status(void)
 	
 	return ERROR;
 }
-/*
-函数功能：查看节点休眠时间
-参数：void
-返回值：SUCCESS:成功 ERROR:失败
-备注：适用：节点
-		注:该函数为A72_SEND_ORDER函数的参数 不可独自调用
-*/
-int A72_Read_Sleep_time(void)
-{
-	
-	uint8_t Read_Data_OK = 0;//接收完成标志
-	uint8_t RX_Correct = 0;//接收正确标志
-	uint8_t i = 0;//临时变量
-
-//	memset(A72_RX_BUF,0,128);
-	
-	if(rt_sem_take(A72_Respond,50) == 0)//等待接收完成 等待时间50ms
-	{
-		for(i=0;(Read_Data_OK==0 && i < 20);i++)
-		{
-			
-			if(A72_RX_BUF[i] == A72_Sbit && RX_Correct == 0)
-				if(A72_RX_BUF[i+1] == 0x81 && A72_RX_BUF[i+2] == 0xD1)//回应命令：0x81D1
-					RX_Correct = 1;//接收正确
-				
-			if(RX_Correct == 1)//如果接收到正确的数据
-			{
-				i += 6;//跳过命令位、长度位、校验位
-				
-				_value.Sleep_Time = (A72_RX_BUF[i] << 8) | A72_RX_BUF[i+1];
-				
-				Read_Data_OK = 1;//接收完成
-				
-				return SUCCESS;
-			}
-		}
-	}
-	else
-		return ERROR;
-	
-	return ERROR;
-
-}
-/*
-函数功能：节点设置休眠时间
-参数：time ： 设置的时长
-返回值：void
-备注：适用：节点
-*/
-void A72_SET_TIME(uint16_t time)
-{
-	A72_WAKE_UP_SET();//唤醒
-	
-	memset(A72_send_order_buf,0,20);
-	
-	A72_send_order_buf[0] = A72_Sbit;
-	A72_send_order_buf[1] = C_SET_time >> 8;
-	A72_send_order_buf[2] = C_SET_time & 255;
-	A72_send_order_buf[3] = L_SET_time >> 8;
-	A72_send_order_buf[4] = L_SET_time & 255;
-	A72_send_order_buf[5] = V_SET_time;
-	A72_send_order_buf[6] = time >> 8;
-	A72_send_order_buf[7] = time & 255;
-	A72_send_order_buf[8] = A72_Ebit;
-	
-	A72_Send_Data(A72_send_order_buf,SET_time_Bytes);
-	
-	A72_WAKE_UP_RESET();//休眠
-}
 #endif
 
 #if ZIGBEE_A72_COORDINATOR
@@ -504,9 +426,9 @@ int A72_SEND_ORDER( A72_Instruction_Format *order,int(*ORDER)(void) )
 返回值：int   SUCCESS:成功   ERROR:失败
 备注：该函数同样可以发送1个字节的数据 当发送1个字节的数据时 需创建一个BUF[1] 来储存 
 	  target的取值有：_COORDINATOR：0
-	                 _NODE1 ：1  _NODE2 ：2  _NODE3 ：3  _B_ALL ：99  _B_SLEEP ：98  _B_ROUTER ：97
-*mode的取值有：&A72_SEND_MODE_IEEE ：IEEE地址发送   &A72_SEND_MODE_SHORT ：短地址发送  &SEND_MODE_BROADCAST ：广播发送   
-	  注：如果输入了其他target值且小于90 则默认发送给协调器
+	                 _NODE1 ：1  _NODE2 ：2  _NODE3 ：3
+	  *mode的取值有：&A72_SEND_MODE_IEEE ：IEEE地址发送   &A72_SEND_MODE_SHORT ：短地址发送   
+	  注：如果输入了其他target值 则默认发送给协调器
 */
 int A72_SEND_DATA(int target,A72_SEND_MODE *mode,uint8_t *data,uint8_t len)
 {
@@ -657,6 +579,11 @@ void A72_HANDLE_DATA(void)
 			{
 				rt_kprintf("node1:lig:%d peo:%d led-st:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
 				NODE1_LIGHT = rx_data_buf[1] << 8 | rx_data_buf[2];
+				if((rx_data_buf[3] << 8 | rx_data_buf[4]) > NODE1_PEOPLE)
+				{
+					rt_sem_release(NODE_Appear_person);
+					NODE_Appear_dirction = 0x12;
+				}
 				NODE1_PEOPLE = rx_data_buf[3] << 8 | rx_data_buf[4];
 				NODE1_LED_STATUS = rx_data_buf[5];
 				RX_NODE1 = 1;
@@ -672,23 +599,14 @@ void A72_HANDLE_DATA(void)
 			{
 				rt_kprintf("node2:lig:%d peo:%d led-st:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
 				NODE2_LIGHT = rx_data_buf[1] << 8 | rx_data_buf[2];
+				if((rx_data_buf[3] << 8 | rx_data_buf[4]) > NODE2_PEOPLE)
+				{
+					rt_sem_release(NODE_Appear_person);
+					NODE_Appear_dirction = 0x21;
+				}
 				NODE2_PEOPLE = rx_data_buf[3] << 8 | rx_data_buf[4];
 				NODE2_LED_STATUS = rx_data_buf[5];
 				RX_NODE2 = 1;
-			}
-			break;
-		case 0x03:
-			if(rx_data_buf[1] == 0x7A)//接收到回应的心跳包
-			{
-				NODE3_CONNECT_STATUS = 1;
-			}
-			else//否则为接收数据
-			{
-				rt_kprintf("node3:lig:%d peo:%d led-st:%d\n",(rx_data_buf[1] << 8 | rx_data_buf[2]),(rx_data_buf[3] << 8 | rx_data_buf[4]),rx_data_buf[5]);
-				NODE3_LIGHT = rx_data_buf[1] << 8 | rx_data_buf[2];
-				NODE3_PEOPLE = rx_data_buf[3] << 8 | rx_data_buf[4];
-				NODE3_LED_STATUS = rx_data_buf[5];
-				RX_NODE3 = 1;
 			}
 			break;
 		default:
@@ -745,22 +663,7 @@ int A72_Init(void)
 		return ERROR;//失败返回
 	}
 	
-#if ZIGBEE_A72_NODE
 	
-//	rt_thread_mdelay(100);//延时
-//	
-//	A72_SET_TIME(1);//设置休眠1s
-	
-	rt_thread_mdelay(100);//延时
-	
-	_value.Sleep_Time = 0;//防止出错
-	
-	if(A72_SEND_ORDER(&Sleep_time,A72_Read_Sleep_time) == SUCCESS)//查看休眠时间
-		rt_kprintf("A72_Read_Sleep_time successed..\n");
-	else
-		rt_kprintf("A72_Read_Sleep_time failed..\n");
-	
-#endif		
 	
 #if ZIGBEE_A72_COORDINATOR
 	
@@ -810,9 +713,6 @@ void A72_Print_Information(void)
 	for(count=0;count<S_Adder_LEN;count++)
 		rt_kprintf("%x ",_value.S_Adder[count]);
 	rt_kprintf("\nDevice Type:%s\n",_value.Type_Device);
-#if ZIGBEE_A72_NODE
-	rt_kprintf("Node Sleep time:%ds\n",_value.Sleep_Time);
-#endif
 }
 
 int rt_A72_init(void)
