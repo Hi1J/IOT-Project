@@ -8,7 +8,7 @@ rt_device_t A72_dev;
 
 A72_u8 A72_send_order_buf[20];//发送指令BUF
 A72_u8 A72_send_data_buf[100];//发送数据BUF
-A72_u8 A72_RX_BUF[128];
+A72_u8 A72_RX_BUF[256];
 
 /*
 发送数据说明：
@@ -700,6 +700,9 @@ void A72_HANDLE_DATA(void)
 	}
 //	rt_kprintf("\n");//Debug
 	
+	memset(A72_RX_BUF,0,256);
+	
+	rt_kprintf("\nzigbee data hadle....\n");
 	
 	/******************用户定义区******************/
 	switch(rx_data_buf[0])
@@ -756,7 +759,8 @@ void A72_HANDLE_DATA(void)
 
 	
 	/******************用户定义区******************/
-	memset(A72_RX_BUF,0,128);
+	
+
 	
 }
 

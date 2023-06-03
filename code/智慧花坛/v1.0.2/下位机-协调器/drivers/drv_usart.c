@@ -111,9 +111,11 @@ void USART1_IRQHandler(void)
 	}
 	if(usart_interrupt_flag_get(USART1,USART_INT_FLAG_IDLE) != RESET)
 	{
+		
 		res = usart_data_receive(USART1);
 		count = 0;//计数值复位
-		if(A72_RX_BUF[0] == 0x55 && A72_RX_BUF[1] == 0xFF && A72_RX_BUF[2] == 0x01)
+		//rt_mutex_take(A72_Data_handle,RT_WAITING_FOREVER);
+		if(A72_RX_BUF[0] == 0x55 && A72_RX_BUF[1] == 0xFF && A72_RX_BUF[2] == 0x01 && A72_Device_Connect == 1)
 			rt_sem_release(A72_Data_handle);//接收回应完成标志 释放处理数据信号量
 		else
 			rt_sem_release(A72_Respond);//接收回应完成标志 释放回应信号量
@@ -181,7 +183,7 @@ void USART2_Send_A_Data(rt_uint8_t data)
 
 void USART2_Send_Data(uint8_t *data,uint16_t len)
 {
-	uint8_t i;
+	uint16_t i;
 	for(i=0;i<len;i++)
 	{
 		while(RESET == usart_flag_get(USART2, USART_FLAG_TBE));

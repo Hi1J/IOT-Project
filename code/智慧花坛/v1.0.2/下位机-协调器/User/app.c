@@ -5,15 +5,15 @@
 
 //任务1
 struct rt_thread th1;
-rt_uint8_t th1_stack[512] = {0};
+rt_uint8_t th1_stack[1024] = {0};
 
 //任务2
 struct rt_thread th2;
-rt_uint8_t th2_stack[1024] = {0};
+rt_uint8_t th2_stack[2048] = {0};
 
 //任务3
 struct rt_thread th3;
-rt_uint8_t th3_stack[512] = {0};
+rt_uint8_t th3_stack[1024] = {0};
 
 //任务4
 struct rt_thread th4;
@@ -21,20 +21,27 @@ rt_uint8_t th4_stack[1024] = {0};
 
 //任务5
 struct rt_thread th5;
-rt_uint8_t th5_stack[512] = {0};
+rt_uint8_t th5_stack[1024] = {0};
 
 //任务6
 struct rt_thread th6;
 rt_uint8_t th6_stack[1024] = {0};
 
+//任务7
+struct rt_thread th7;
+rt_uint8_t th7_stack[1024] = {0};
+
 
 rt_sem_t A72_Respond;//A72回应信号量
 rt_sem_t A72_Connect;//A72连接信号量
 rt_sem_t A72_Data_handle;
+//rt_mutex_t A72_Data_handle;
 
 rt_sem_t FS_Respond;
 
 rt_sem_t BC28_Respond;
+
+rt_sem_t WaterValve;
 
 rt_uint8_t A72_Device_Connect = 0;//ZIGBEE硬件状况标志位 0：正常 1：异常 
 
@@ -44,6 +51,9 @@ rt_uint8_t BC28_Connect = 0;
 
 rt_uint8_t MQTT_Connect = 0;
 
+int WaterValveLen = 0;
+
+rt_uint8_t WaterValve_RX = 0;
 
 rt_uint8_t STATE_NODE_BUF[6] = {0};
 
@@ -86,10 +96,17 @@ void Zigbee_Data_handle(void *parameter)
 	while(1)
     {
 		rt_sem_take(A72_Data_handle,RT_WAITING_FOREVER);//阻塞等待
+//		rt_mutex_take(A72_Data_handle,RT_WAITING_FOREVER);//阻塞等待
+		
+		rt_enter_critical();
 		
 		A72_HANDLE_DATA();
 		
-		rt_thread_mdelay(5);
+		rt_exit_critical();
+		
+		rt_thread_mdelay(15);
+		
+//		rt_mutex_release(A72_Data_handle);
 		
     }
 }
@@ -129,8 +146,6 @@ void Zigbee_Heartbeat(void *parameter)
 				
 				rt_memset(STATE_NODE_BUF,0,6);
 				
-//				rt_kprintf("first_check\n");
-				
 				rt_uint8_t max_repeat = 2;
 				
 				while(max_repeat --)
@@ -155,19 +170,13 @@ void Zigbee_Heartbeat(void *parameter)
 			
 			rt_thread_mdelay(5000);//等待最长周期5s
 			
-			//node = &STATE_NODE.NODE1;//取NODE1的地址
-			
 			node_state_number = 0;
 			
 			for(count = 0;count < 6;count ++)
 			{
 				
-				//*(node++) = STATE_NODE_BUF[count];
-				
 				if(first_check == 1 && STATE_NODE_BUF[count] == 0)//若未回应 则单独发送
 				{
-					
-					rt_kprintf("send to node%d\n",count+1);
 					
 					A72_SEND_DATA(count+1,&A72_SEND_MODE_IEEE,checkbuf,2);
 					
@@ -231,7 +240,6 @@ void Air_quality_takeValue(void *parameter)
 			
 			rt_kprintf("Air quality take successed..\n\n");
 			
-//			JSON_Format();
 			
 			rt_kprintf("\n");
 			
@@ -291,6 +299,8 @@ void MQTT_INIT(void *parameter)
 			
 			rt_thread_startup(&th6);//启动任务6
 			
+			
+			
 			_flag = rt_thread_suspend(&th5);//挂起自身
 				
 			if(_flag == RT_EOK)
@@ -310,6 +320,8 @@ void MQTT_INIT(void *parameter)
 //任务6--上传数据至阿里云
 void MQTT_PUB_DATA(void *parameter)
 {
+//	char buf[50];
+	int len = 0;
 	
 	while(1)
 	{
@@ -318,10 +330,14 @@ void MQTT_PUB_DATA(void *parameter)
 		
 		JSON_Format();
 		
+		len = strlen(Json_Buf);
+		
+		rt_kprintf("\nsend len:%d\n\n",len);
+		
+//		rt_enter_critical();
 		
 		if(MQTT_Connect == 1)
 		{
-			
 			if(MQTT_PUB(Json_Buf) == SUCCESS)
 				rt_kprintf("Data upload to Aliyun successed!\n\n");
 			else
@@ -329,7 +345,40 @@ void MQTT_PUB_DATA(void *parameter)
 
 		}
 		
+//		rt_exit_critical();
+		
+
+		
+//		}
 	}
+}
+
+void WaterValveControl(void *parameter)
+{
+	SHUIfa_init();
+	
+	char value;
+	
+	while(1)
+	{
+		
+//		WaterValve_RX = 1;
+		
+		rt_sem_take(WaterValve,RT_WAITING_FOREVER);//阻塞等待
+		
+		value = BC28_RX_BUF[WaterValveLen - 1];
+		
+		rt_kprintf("yes\n");
+		
+		rt_kprintf("%c\n",value);
+		
+		WaterValveLen = 0;
+		
+		rt_memset(BC28_RX_BUF,0,200);
+		
+		rt_thread_mdelay(500);
+	}
+
 }
 
 

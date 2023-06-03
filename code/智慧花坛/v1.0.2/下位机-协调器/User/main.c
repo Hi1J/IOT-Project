@@ -131,6 +131,12 @@ void AppTaskStart(void *parameter)
 	else
 		LOG_D("dynamic A72_Data_handle rt_sem_create successed..\n");
 	
+//	A72_Data_handle = rt_mutex_create("A72_Data_handle",RT_IPC_FLAG_FIFO);//先进先出
+//	if(A72_Data_handle == RT_NULL)
+//		LOG_E("A72_Data_handle rt_mutex_create create failed..\n");
+//	else
+//		LOG_D("A72_Data_handle rt_mutex_create create successed..\n");
+	
 	FS_Respond = rt_sem_create("FS_Respond",0,RT_IPC_FLAG_FIFO);//按照先进先出方式获取资源
 	if(FS_Respond == RT_NULL)
 		LOG_E("dynamic FS_Respond rt_sem_create failed..\n");
@@ -142,6 +148,12 @@ void AppTaskStart(void *parameter)
 		LOG_E("dynamic BC28_Respond rt_sem_create failed..\n");
 	else
 		LOG_D("dynamic BC28_Respond rt_sem_create successed..\n");
+	
+	WaterValve = rt_sem_create("WaterValve",0,RT_IPC_FLAG_FIFO);//按照先进先出方式获取资源
+	if(WaterValve == RT_NULL)
+		LOG_E("dynamic WaterValve rt_sem_create failed..\n");
+	else
+		LOG_D("dynamic WaterValve rt_sem_create successed..\n");
 	
 	//静态硬定时创建
 	rt_timer_init(&bc28_10ms,"bc28_10ms",bc28_callback,NULL,10,//1s执行一次 
@@ -189,13 +201,21 @@ void AppTaskStart(void *parameter)
 	else
 		LOG_D("th6 create successed..\n");
 	
+	//任务7创建
+	ret = rt_thread_init(&th7,"WaterValveControl",MQTT_PUB_DATA,NULL,th7_stack,sizeof(th7_stack),th7_test_priority,5);
+	if(ret < 0)
+		LOG_E("th7 create failed..\n");
+	else
+		LOG_D("th7 create successed..\n");
+	
+	SHUIfa_init();
 	
 	
 	//任务启动
 	rt_thread_startup(&th1);
 	rt_thread_startup(&th4);
 	rt_thread_startup(&th5);
-	
+//	rt_thread_startup(&th7);
 }
 
 

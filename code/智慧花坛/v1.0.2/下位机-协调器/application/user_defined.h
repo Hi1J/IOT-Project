@@ -54,6 +54,7 @@ extern NODE_DATA node6_data;
 
 
 void JSON_Format(void);
+void SHUIfa_init(void);
 
 
 

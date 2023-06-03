@@ -282,7 +282,7 @@ extern A72_Instruction_Format Device_Type;
 extern A72_SEND_MODE SEND_MODE_IEEE;
 extern A72_SEND_MODE SEND_MODE_SHORT;
 extern A72_SEND_MODE SEND_MODE_BROADCAST;
-extern A72_u8 A72_RX_BUF[128];
+extern A72_u8 A72_RX_BUF[256];
 #if ZIGBEE_A72_COORDINATOR
 extern A72_Instruction_Format CreateNet;
 #endif

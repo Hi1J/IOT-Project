@@ -94,36 +94,55 @@ void JSON_Format(void)
 	strcat(Json_Buf,buf);
 	
 	
-	if(STATE_NODE_BUF[0])
+	if(STATE_NODE.NODE1)
 	{
-		sprintf(buf,",%s:%.2f,",Param_Post18,(float)(node1_data._Ph) / 100.0);
+		sprintf(buf,",\"%s\":%.2f,",Param_Post18,(float)(node1_data._Ph) / 100.0);
 	
 		strcat(Json_Buf,buf);
 		
-		sprintf(buf,"%s:%.1f,",Param_Post19,(float)(node1_data._Hum) / 10.0);
+		sprintf(buf,"\"%s\":%.1f,",Param_Post19,(float)(node1_data._Hum) / 10.0);
 		
 		strcat(Json_Buf,buf);
 		
 		
 		if(node1_data._Tem & (1 << 15))
 		{
-			sprintf(buf,"%s:%.1f,",Param_Post20,(float)(node1_data._Tem - 0xFFFF) / 10.0);
+			sprintf(buf,"\"%s\":%.1f,",Param_Post20,(float)(node1_data._Tem - 0xFFFF) / 10.0);
 		}
 		else
 		{
-			sprintf(buf,"%s:%.1f,",Param_Post20,(float)(node1_data._Tem) / 10.0);
+			sprintf(buf,"\"%s\":%.1f,",Param_Post20,(float)(node1_data._Tem) / 10.0);
 		}
 		
 		strcat(Json_Buf,buf);
 		
-		sprintf(buf,"%s:%d",Param_Post21,node1_data._Ec);
+		sprintf(buf,"\"%s\":%d",Param_Post21,node1_data._Ec);
 		
 		strcat(Json_Buf,buf);
 	}
 	
-	
 	strcat(Json_Buf,"}}");
 	
 	
+}
+
+void SHUIfa_init(void)
+{
+	rcu_periph_clock_enable(RCU_GPIOB);//开GPIOA时钟
+	
+	rcu_periph_clock_enable(RCU_GPIOC);//开GPIOC时钟
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_14);//GPIO工作模式配置
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_13);//GPIO工作模式配置
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_12);//GPIO工作模式配置
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_0);//GPIO工作模式配置
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_1);//GPIO工作模式配置
+	
+	
+	gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_5);//GPIO工作模式配置
 }
 
