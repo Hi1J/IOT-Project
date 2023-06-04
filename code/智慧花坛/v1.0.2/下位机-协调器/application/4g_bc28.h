@@ -3,24 +3,6 @@
 
 #include "app.h"
 
-
-//#define ProductKey "i3uocf6XqNy"						
-//#define DeviceName "bc26_1"					
-//#define DeviceSecret "8150afbe44b5c6ed14fd16adf40e4b72" 
-
-////#define Domain "iot-06z00dymnfjkl1d.mqtt.iothub.aliyuncs.com"	
-//#define Domain "139.196.135.135"
-//#define Port "1883"														                    //端口
-//#define ConnectID "bc26_1"	//设备名称
-////#define ConnectID "i3uocf6XqNy.bc26_1"
-//#define PubTopic "/sys/i3uocf6XqNy/bc26_1/thing/event/property/post"			      //发送路径
-//#define SubTopic "/i3uocf6XqNy/bc26_1/user/get" 							//订阅路径
-//#define Param_Post1 "CurrentTemperature"			                            //标签名称
-//#define Param_Post2 "CurrentHumidity"	                                //
-//#define Param_Post3 "nnnnnnnnnnnnn"
-
-
-
 #define ProductKey "i3uoHQmkf3Q"						
 #define DeviceName "HPU_JS_huatan"					
 #define DeviceSecret "5f54cfea6086cc4afddfac2c3f7155ce" 

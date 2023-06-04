@@ -8,7 +8,7 @@ rt_device_t A72_dev;
 
 A72_u8 A72_send_order_buf[20];//发送指令BUF
 A72_u8 A72_send_data_buf[100];//发送数据BUF
-A72_u8 A72_RX_BUF[256];
+A72_u8 A72_RX_BUF[128];
 
 /*
 发送数据说明：
@@ -688,7 +688,8 @@ void A72_HANDLE_DATA(void)
 	
 	A72_u8 len;//数据长度存储变量
 	A72_u8 count;//临时变量
-	A72_u8 rx_data_buf[81];
+	A72_u8 rx_data_buf[81] = {0};
+	struct ZIGBEE_NODE_REPLY node_reply = {100,0,0};
 	
 	len = A72_RX_BUF[4] - L_Receive_Data + 1;
 	
@@ -700,67 +701,40 @@ void A72_HANDLE_DATA(void)
 	}
 //	rt_kprintf("\n");//Debug
 	
-	memset(A72_RX_BUF,0,256);
+	memset(A72_RX_BUF,0,128);
 	
-	rt_kprintf("\nzigbee data hadle....\n");
+	rt_kprintf("\nzigbee data hadle....\n\n");
 	
 	/******************用户定义区******************/
-	switch(rx_data_buf[0])
+	
+	node_reply = ZIGBEE_USER_DEFINE(rx_data_buf);
+	
+	if(node_reply.state == ZIGBEE_SUCCESS)
 	{
-		case 0x01:
-			if(rx_data_buf[1] == 0x7A)
+		if(node_reply.type_reply == Zigbee_data)
+		{
+			rt_kprintf("\nnode%d data:\n",node_reply.node);
+			Debug_printf("PH :%.2f fpH\r\n",(float)(node_reply.node_data->_Ph) / 100.0);
+			Debug_printf("HUM:%.1f %%RH\r\n",(float)(node_reply.node_data->_Hum) / 10.0);
+			if(node1_data._Tem & (1 << 15))
 			{
-				STATE_NODE_BUF[0] = 1;
+				Debug_printf("TEM:%.1f C\r\n",(float)(node_reply.node_data->_Tem - 0xFFFF) / 10.0);
 			}
-			else if(rx_data_buf[1] == 0x8A)
+			else
 			{
-				
-				node1_data._Ph  = (rx_data_buf[2] << 8) | rx_data_buf[3];
-				node1_data._Tem = (rx_data_buf[4] << 8) | rx_data_buf[5];
-				node1_data._Hum = (rx_data_buf[6] << 8) | rx_data_buf[7];
-				node1_data._Ec  = (rx_data_buf[8] << 8) | rx_data_buf[9];
-				
-				rt_kprintf("\nnode1 data:\n");
-				Debug_printf("PH :%.2f fpH\r\n",(float)(node1_data._Ph) / 100.0);
-				Debug_printf("HUM:%.1f %%RH\r\n",(float)(node1_data._Hum) / 10.0);
-				if(node1_data._Tem & (1 << 15))
-				{
-					Debug_printf("TEM:%.1f C\r\n",(float)(node1_data._Tem - 0xFFFF) / 10.0);
-				}
-				else
-				{
-					Debug_printf("TEM:%.1f C\r\n",(float)(node1_data._Tem) / 10.0);
-				}
-				Debug_printf("EC :%d us/cm\n",node1_data._Ec);
-				rt_kprintf("\n\n");
+				Debug_printf("TEM:%.1f C\r\n",(float)(node_reply.node_data->_Tem) / 10.0);
 			}
-			break;
-		case 0x02:
-		    if(rx_data_buf[1] == 0x7A)
-				STATE_NODE_BUF[1] = 1;
-			break;
-		case 0x03:
-			if(rx_data_buf[1] == 0x7A)
-				STATE_NODE_BUF[2] = 1;
-			break;
-		case 0x04:
-			if(rx_data_buf[1] == 0x7A)
-				STATE_NODE_BUF[3] = 1;
-		case 0x05:
-			if(rx_data_buf[1] == 0x7A)
-				STATE_NODE_BUF[4] = 1;
-		case 0x06:
-			if(rx_data_buf[1] == 0x7A)
-				STATE_NODE_BUF[5] = 1;
-		default:
-			break;
+			Debug_printf("EC :%d us/cm\n",node_reply.node_data->_Ec);
+			rt_kprintf("\n\n");
+		}
+		else if(node_reply.type_reply == Zigbee_check)
+		{
+			rt_kprintf("\nnode%d check reply\n\n",node_reply.node);
+		}
 	}
-
-
 	
+
 	/******************用户定义区******************/
-	
-
 	
 }
 

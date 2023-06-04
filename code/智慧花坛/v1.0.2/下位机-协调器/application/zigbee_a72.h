@@ -38,14 +38,14 @@ typedef unsigned int                    A72_u32;    /**< 32bit unsigned integer 
 #define A72_NODE3_ADDERSS_BROADCAST_SLEEP            0xFFFD                  /*!<广播发送给睡眠设备      */
 #define A72_NODE3_ADDERSS_BROADCAST_ROUTER           0xFFFC                  /*!<广播发送给路由器设备    */
 
-#define A72_COORDINATOR_ADDERSS_IEEE                 0xa4c1381707edafa9       /*!<协调器IEEE地址      */
+#define A72_COORDINATOR_ADDERSS_IEEE                 0xa4c1381707edafa9      /*!<协调器IEEE地址      */
 #define A72_COORDINATOR_ADDERSS_SHORT                0x0000                  /*!<协调器短地址          */
 
 #define A72_NODE1_ADDERSS_IEEE                       0xa4c138850c220ac6      /*!<节点1IEEE地址      */
 #define A72_NODE1_ADDERSS_SHORT                      0xb522                  /*!<节点1短地址          */
 
-#define A72_NODE2_ADDERSS_IEEE                       0xa4c13879d6650ef0      /*!<节点2IEEE地址      */
-#define A72_NODE2_ADDERSS_SHORT                      0xb56e                  /*!<节点2短地址          */
+#define A72_NODE2_ADDERSS_IEEE                       0xa4c138804d1dc35a      /*!<节点2IEEE地址      */
+#define A72_NODE2_ADDERSS_SHORT                      0xb4f5                  /*!<节点2短地址          */
 
 #define A72_NODE3_ADDERSS_IEEE                       0xa4c1382784a9d8c2      /*!<节点3IEEE地址      */
 #define A72_NODE3_ADDERSS_SHORT                      0x6937                  /*!<节点3短地址          */
@@ -282,7 +282,7 @@ extern A72_Instruction_Format Device_Type;
 extern A72_SEND_MODE SEND_MODE_IEEE;
 extern A72_SEND_MODE SEND_MODE_SHORT;
 extern A72_SEND_MODE SEND_MODE_BROADCAST;
-extern A72_u8 A72_RX_BUF[256];
+extern A72_u8 A72_RX_BUF[128];
 #if ZIGBEE_A72_COORDINATOR
 extern A72_Instruction_Format CreateNet;
 #endif

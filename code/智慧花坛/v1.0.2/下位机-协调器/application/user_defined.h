@@ -8,18 +8,23 @@
 #define CharValue(x,y)  (*(char **)(x + y))
 
 
-#define Zigbee_soildata     0x8A
-#define Zigbee_check        0x7A
+#define Zigbee_data            0x8A        /*ZIGBEE数据命令*/
+#define Zigbee_check           0x7A        /*ZIGBEE心跳命令*/
 
 
-typedef struct
-{
-	char *AirTem_Post;
-	char *AirTem_Value;
-	char *AirHum_Post;
-	char *AirHum_Value;
-	
-}ALI_JSON;
+#define ZIGBEE_ERR_NUMBER      0x00        /*ZIGBEE序号错误*/
+#define ZIGBEE_ERR_ORDER       0x01        /*ZIGBEE命令错误*/
+#define ZIGBEE_SUCCESS         0x02        /*ZIGBEE数据正确*/
+
+
+//typedef struct
+//{
+//	char *AirTem_Post;
+//	char *AirTem_Value;
+//	char *AirHum_Post;
+//	char *AirHum_Value;
+//	
+//}ALI_JSON;
 
 typedef struct 
 {
@@ -42,7 +47,16 @@ typedef struct
 	rt_uint8_t NODE6;
 }ZIGBEE_NODE_STATE;
 
-extern ALI_JSON ali_json;
+struct ZIGBEE_NODE_REPLY
+{
+	unsigned char state;       //数据状态
+	unsigned char node;        //节点标号
+	unsigned char type_reply;  //回应类型
+	NODE_DATA *node_data;      //节点数据
+};
+
+
+//extern ALI_JSON ali_json;
 extern char Json_Buf[1024];
 extern ZIGBEE_NODE_STATE STATE_NODE;
 extern NODE_DATA node1_data;
@@ -55,6 +69,7 @@ extern NODE_DATA node6_data;
 
 void JSON_Format(void);
 void SHUIfa_init(void);
+struct ZIGBEE_NODE_REPLY ZIGBEE_USER_DEFINE(unsigned char *node_flag);
 
 
 

@@ -234,14 +234,11 @@ void Air_quality_takeValue(void *parameter)
 			
 		result = FS_DATA_HANDLE(FS_RX_BUF,FS_RX_LEN);
 		
-		
+					rt_kprintf("\n");
 		if(result == FS_SUCCESS)
 		{
 			
 			rt_kprintf("Air quality take successed..\n\n");
-			
-			
-			rt_kprintf("\n");
 			
 			FS_DATA_DEBUG();//´òÓ¡Êý¾Ý
 			

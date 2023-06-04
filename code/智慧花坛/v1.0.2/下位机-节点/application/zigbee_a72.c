@@ -631,7 +631,7 @@ int A72_SEND_DATA(int target,A72_SEND_MODE *mode,A72_u8 *data,A72_u8 len)
 		
 		A72_Send_Data(A72_send_data_buf,count_num);
 		
-		if(rt_sem_take(A72_Respond,50) == 0)//等待接收完成 等待时间50ms
+		if(rt_sem_take(A72_Respond,100) == 0)//等待接收完成 等待时间50ms
 		{
 			for(i=0;i < 20;i++)
 			{
